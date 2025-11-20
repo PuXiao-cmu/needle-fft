@@ -59,13 +59,37 @@ class DataLoader:
                                            range(batch_size, len(dataset), batch_size))
 
     def __iter__(self):
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        n = len(self.dataset)
+        bs = 1 if self.batch_size is None else self.batch_size
+
+        if self.shuffle:
+            indices = np.arange(n)
+            np.random.shuffle(indices)
+            self._ordering = np.array_split(indices, range(bs, n, bs))
+        else:
+            self._ordering = self.ordering
+
+        self._batch_ptr = 0
         return self
 
     def __next__(self):
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        if self._batch_ptr >= len(self._ordering):
+            raise StopIteration
+
+        idxs = self._ordering[self._batch_ptr]
+        self._batch_ptr += 1
+
+        samples = [self.dataset[int(i)] for i in idxs]
+        first = samples[0]
+
+        def to_tensor_batch(items):
+            arr = np.stack(items, axis=0)
+            return Tensor(arr)
+
+        if isinstance(first, (tuple, list)):
+            fields = list(zip(*samples))
+            batched = [to_tensor_batch(list(f)) for f in fields]
+            return tuple(batched)
+        else:
+            return to_tensor_batch(samples)
 

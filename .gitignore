@@ -1,0 +1,37 @@
+# Data files (too large for GitHub)
+data/
+*.tar.gz
+*.zip
+*.h5
+*.pkl
+*.npy
+
+# Compiled files
+build/
+*.so
+*.o
+*.pyc
+__pycache__/
+
+# Python
+*.egg-info/
+dist/
+.eggs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test outputs
+cuda_test_results.txt
+cuda_performance.png
+*.log
+
+# macOS
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/

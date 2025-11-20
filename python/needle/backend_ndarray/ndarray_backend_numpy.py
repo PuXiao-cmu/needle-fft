@@ -1,5 +1,12 @@
 import numpy as np
+import os
 
+# FFT implementation selector
+# Set environment variable NEEDLE_FFT_IMPL to choose implementation:
+#   "numpy" (default): Use NumPy's optimized FFT
+#   "cooley_tukey": Use custom Cooley-Tukey Python implementation
+#   "cpp": Use C++ Cooley-Tukey implementation (requires compilation)
+FFT_IMPLEMENTATION = os.environ.get("NEEDLE_FFT_IMPL", "numpy")
 
 __device_name__ = "numpy"
 _datatype = np.float32
@@ -115,3 +122,95 @@ def reduce_max(a, out, reduce_size):
 
 def reduce_sum(a, out, reduce_size):
     out.array[:] = a.array[:].reshape(-1, reduce_size).sum(axis=1)
+
+
+def fft(a, out_real, out_imag, shape, axis):
+    """
+    Compute FFT along specified axis, returning real and imaginary parts separately.
+
+    Implementation can be selected via NEEDLE_FFT_IMPL environment variable:
+    - "numpy" (default): NumPy's optimized FFT (fast, production-ready)
+    - "cooley_tukey": Custom Cooley-Tukey implementation (educational, slower)
+
+    Args:
+        a: Input Array (flattened, real-valued)
+        out_real: Output Array for real part (flattened, same size as input)
+        out_imag: Output Array for imaginary part (flattened, same size as input)
+        shape: Shape of the array
+        axis: Axis along which to compute FFT
+    """
+    # Reshape input to proper shape
+    a_reshaped = a.array.reshape(shape)
+
+    # Choose FFT implementation
+    if FFT_IMPLEMENTATION == "cooley_tukey":
+        # Import Cooley-Tukey implementation
+        try:
+            from .fft_cooley_tukey import cooley_tukey_fft_iterative
+        except (ImportError, ValueError):
+            # Fallback for direct module loading
+            import sys
+            module_dir = os.path.dirname(os.path.abspath(__file__))
+            if module_dir not in sys.path:
+                sys.path.insert(0, module_dir)
+            from fft_cooley_tukey import cooley_tukey_fft_iterative
+
+        # Apply FFT along specified axis
+        fft_result = np.apply_along_axis(
+            cooley_tukey_fft_iterative, axis, a_reshaped
+        )
+    else:
+        # Use NumPy's optimized FFT (default)
+        fft_result = np.fft.fft(a_reshaped, axis=axis, norm='backward')
+
+    # Split into real and imaginary parts
+    out_real.array[:] = np.real(fft_result).astype(np.float32).flatten()
+    out_imag.array[:] = np.imag(fft_result).astype(np.float32).flatten()
+
+
+def ifft(a_real, a_imag, out, shape, axis):
+    """
+    Compute IFFT along specified axis from real and imaginary parts.
+
+    Implementation can be selected via NEEDLE_FFT_IMPL environment variable:
+    - "numpy" (default): NumPy's optimized IFFT (fast, production-ready)
+    - "cooley_tukey": Custom Cooley-Tukey implementation (educational, slower)
+
+    Args:
+        a_real: Input Array for real part (flattened)
+        a_imag: Input Array for imaginary part (flattened)
+        out: Output Array (flattened, real-valued, same size as input)
+        shape: Shape of the array
+        axis: Axis along which to compute IFFT
+    """
+    # Reshape inputs to proper shape
+    a_real_reshaped = a_real.array.reshape(shape)
+    a_imag_reshaped = a_imag.array.reshape(shape)
+
+    # Reconstruct complex array
+    a_complex = a_real_reshaped + 1j * a_imag_reshaped
+
+    # Choose IFFT implementation
+    if FFT_IMPLEMENTATION == "cooley_tukey":
+        # Import Cooley-Tukey implementation
+        try:
+            from .fft_cooley_tukey import cooley_tukey_ifft_iterative
+        except (ImportError, ValueError):
+            # Fallback for direct module loading
+            import sys
+            module_dir = os.path.dirname(os.path.abspath(__file__))
+            if module_dir not in sys.path:
+                sys.path.insert(0, module_dir)
+            from fft_cooley_tukey import cooley_tukey_ifft_iterative
+
+        # Apply IFFT along specified axis
+        ifft_result = np.apply_along_axis(
+            cooley_tukey_ifft_iterative, axis, a_complex
+        )
+    else:
+        # Use NumPy's optimized IFFT (default)
+        ifft_result = np.fft.ifft(a_complex, axis=axis, norm='backward')
+
+    # Take real part and flatten to output
+    # (Imaginary part should be ~0 for real input signals)
+    out.array[:] = np.real(ifft_result).astype(np.float32).flatten()

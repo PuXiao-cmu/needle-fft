@@ -10,14 +10,55 @@ np.random.seed(0)
 class ResNet9(ndl.nn.Module):
     def __init__(self, device=None, dtype="float32"):
         super().__init__()
-        ### BEGIN YOUR SOLUTION ###
-        raise NotImplementedError() ###
-        ### END YOUR SOLUTION
+
+        def ConvBN(in_c, out_c, k, s):
+            return nn.Sequential(
+                nn.Conv(in_c, out_c, k, stride=s, bias=True, device=device, dtype=dtype),
+                nn.BatchNorm2d(out_c, device=device, dtype=dtype),
+                nn.ReLU(),
+            )
+
+        self.c1 = ConvBN(3,   16, 7, 4)   # 32x32 -> 8x8
+        self.c2 = ConvBN(16,  32, 3, 2)   # 8x8   -> 4x4
+
+        self.r1a = ConvBN(32, 32, 3, 1)
+        self.r1b = ConvBN(32, 32, 3, 1)
+
+        self.c3 = ConvBN(32,  64, 3, 2)   # 4x4 -> 2x2
+        self.c4 = ConvBN(64, 128, 3, 2)   # 2x2 -> 1x1
+
+        self.r2a = ConvBN(128, 128, 3, 1)
+        self.r2b = ConvBN(128, 128, 3, 1)
+
+        self.head = nn.Sequential(
+            nn.Flatten(),                                 # (N,128,1,1) -> (N,128)
+            nn.Linear(128, 128, device=device, dtype=dtype),
+            nn.ReLU(),
+            nn.Linear(128, 10, device=device, dtype=dtype),
+        )
 
     def forward(self, x):
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # x: (N, 3, 32, 32)
+        x = self.c1(x)
+        x = self.c2(x)
+
+        # Residual block 1
+        skip = x
+        x = self.r1a(x)
+        x = self.r1b(x)
+        x = x + skip
+
+        x = self.c3(x)
+        x = self.c4(x)
+
+        # Residual block 2
+        skip = x
+        x = self.r2a(x)
+        x = self.r2b(x)
+        x = x + skip
+
+        return self.head(x)
+
 
 
 class LanguageModel(nn.Module):

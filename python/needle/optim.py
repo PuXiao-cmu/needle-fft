@@ -24,9 +24,22 @@ class SGD(Optimizer):
         self.weight_decay = weight_decay
 
     def step(self):
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        for p in self.params:
+            if p.grad is None:
+                continue
+            g = p.grad.data
+            if self.weight_decay != 0.0:
+                g = g + self.weight_decay * p.data
+
+            if self.momentum != 0.0:
+                v_prev = self.u.get(p, 0)
+                v = self.momentum * v_prev + (1 - self.momentum) * g
+                self.u[p] = v
+                update = v
+            else:
+                update = g
+
+            p.data = p.data - self.lr * update
 
     def clip_grad_norm(self, max_norm=0.25):
         """
@@ -60,6 +73,31 @@ class Adam(Optimizer):
         self.v = {}
 
     def step(self):
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        self.t += 1
+        b1, b2 = self.beta1, self.beta2
+        bias_c1 = 1.0 - (b1 ** self.t)
+        bias_c2 = 1.0 - (b2 ** self.t)
+
+        for p in self.params:
+            if p.grad is None:
+                continue
+            g = p.grad.data
+            if self.weight_decay != 0.0:
+                g = g + self.weight_decay * p.data
+
+            m_prev = self.m.get(p, 0)
+            v_prev = self.v.get(p, 0)
+
+            m = b1 * m_prev + (1.0 - b1) * g
+            v = b2 * v_prev + (1.0 - b2) * (g * g)
+
+            self.m[p] = m
+            self.v[p] = v
+
+            m_hat = m / bias_c1
+            v_hat = v / bias_c2
+
+            inv_rms = np.power(v_hat, 0.5) + self.eps
+            step = self.lr * (m_hat / inv_rms)
+
+            p.data = p.data - step

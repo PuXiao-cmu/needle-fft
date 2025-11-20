@@ -262,7 +262,17 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if prod(self.shape) != prod(new_shape) or not self.is_compact():
+            raise ValueError("reshape requires same number of elements and compact array")
+
+        new_strides = NDArray.compact_strides(new_shape)
+        return NDArray.make(
+            new_shape,
+            strides=new_strides,
+            device=self.device,
+            handle=self._handle,
+            offset=self._offset,
+        )
         ### END YOUR SOLUTION
 
     def permute(self, new_axes: tuple[int, ...]) -> "NDArray":
@@ -287,7 +297,19 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        assert len(new_axes) == self.ndim, "axes length must equal ndim"
+        assert sorted(new_axes) == list(range(self.ndim)), "axes must be a permutation"
+
+        new_shape = tuple(self._shape[a] for a in new_axes)
+        new_strides = tuple(self._strides[a] for a in new_axes)
+
+        return NDArray.make(
+            new_shape,
+            strides=new_strides,
+            device=self.device,
+            handle=self._handle,
+            offset=self._offset,
+        )
         ### END YOUR SOLUTION
 
     def broadcast_to(self, new_shape: tuple[int, ...]) -> "NDArray":
@@ -311,7 +333,29 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        old_shape, old_strides = self._shape, self._strides
+        nd_old, nd_new = len(old_shape), len(new_shape)
+        assert nd_new >= nd_old, "cannot broadcast to fewer dimensions"
+
+        out_strides = [0] * nd_new
+
+        for i in range(1, nd_new + 1):
+            if i <= nd_old:
+                s_old = old_shape[-i]
+                t_new = new_shape[-i]
+                assert s_old == t_new or s_old == 1, "incompatible broadcast shape"
+                out_strides[-i] = 0 if (s_old == 1 and t_new > 1) else old_strides[-i]
+            else:
+                assert new_shape[-i] >= 1, "invalid target shape"
+                out_strides[-i] = 0
+
+        return NDArray.make(
+            new_shape,
+            strides=tuple(out_strides),
+            device=self.device,
+            handle=self._handle,
+            offset=self._offset,
+        )
         ### END YOUR SOLUTION]
 
     ### Get and set elements
@@ -378,7 +422,27 @@ class NDArray:
         assert len(slices) == self.ndim, "Need indexes equal to number of dimensions"
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape: list[int] = []
+        new_strides: list[int] = []
+        off = self._offset
+
+        for dim, sl in enumerate(slices):
+            start, stop, step = sl.start, sl.stop, sl.step
+            base_stride = self._strides[dim]
+
+            off += start * base_stride
+
+            length = (stop - start + step - 1) // step
+            new_shape.append(length)
+            new_strides.append(base_stride * step)
+
+        return NDArray.make(
+            tuple(new_shape),
+            strides=tuple(new_strides),
+            device=self.device,
+            handle=self._handle,
+            offset=off,
+        )
         ### END YOUR SOLUTION
 
     def __setitem__(self, idxs: int | slice | tuple[int | slice, ...], other: Union["NDArray", float]) -> None:
@@ -497,6 +561,58 @@ class NDArray:
         self.device.ewise_tanh(self.compact()._handle, out._handle)
         return out
 
+    def fft(self, axis: int = -1) -> tuple["NDArray", "NDArray"]:
+        """
+        Compute FFT along specified axis, returning real and imaginary parts.
+
+        Args:
+            axis: Axis along which to compute FFT (default: -1)
+
+        Returns:
+            Tuple of (real_part, imag_part), both NDArrays with same shape as input
+        """
+        # Normalize axis
+        if axis < 0:
+            axis = len(self.shape) + axis
+
+        # Create outputs for real and imaginary parts
+        out_real = NDArray.make(self.shape, device=self.device)
+        out_imag = NDArray.make(self.shape, device=self.device)
+
+        # Call backend implementation
+        self.device.fft(self.compact()._handle, out_real._handle, out_imag._handle,
+                        self.shape, axis)
+
+        return out_real, out_imag
+
+    def ifft(self, imag_part: "NDArray", axis: int = -1) -> "NDArray":
+        """
+        Compute IFFT along specified axis from real and imaginary parts.
+
+        Args:
+            imag_part: NDArray containing the imaginary part
+            axis: Axis along which to compute IFFT (default: -1)
+
+        Returns:
+            NDArray with IFFT computed (real-valued)
+
+        Note:
+            self is treated as the real part of the complex input
+        """
+        # Normalize axis
+        if axis < 0:
+            axis = len(self.shape) + axis
+
+        # Output has same shape as input
+        out = NDArray.make(self.shape, device=self.device)
+
+        # Call backend implementation
+        # self is real part, imag_part is imaginary part
+        self.device.ifft(self.compact()._handle, imag_part.compact()._handle,
+                        out._handle, self.shape, axis)
+
+        return out
+
     ### Matrix multiplication
     def __matmul__(self, other: "NDArray") -> "NDArray":
         """Matrix multplication of two arrays.  This requires that both arrays
@@ -587,24 +703,59 @@ class NDArray:
         self.device.reduce_max(view.compact()._handle, out._handle, view.shape[-1])
         return out
 
-    def flip(self, axes: tuple[int, ...]) -> "NDArray":
-        """
-        Flip this ndarray along the specified axes.
-        Note: compact() before returning.
-        """
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+    def pad(self, *pads: tuple[int, int]) -> "NDArray":
+        if len(pads) == 1 and isinstance(pads[0], tuple) and all(
+            isinstance(t, tuple) and len(t) == 2 for t in pads[0]
+        ):
+            pads = pads[0]
 
-    def pad(self, axes: tuple[tuple[int, int], ...]) -> "NDArray":
-        """
-        Pad this ndarray by zeros by the specified amount in `axes`,
-        which lists for _all_ axes the left and right padding amount, e.g.,
-        axes = ( (0, 0), (1, 1), (0, 0)) pads the middle axis with a 0 on the left and right side.
-        """
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        assert len(pads) == self.ndim, "pad: number of pad tuples must equal ndim"
+
+        norm_pads = []
+        for i, p in enumerate(pads):
+            assert isinstance(p, tuple) and len(p) == 2, f"pad[{i}] must be a 2-tuple"
+            l, r = int(p[0]), int(p[1])
+            assert l >= 0 and r >= 0, "pad values must be non-negative integers"
+            norm_pads.append((l, r))
+
+        new_shape = tuple(self.shape[i] + norm_pads[i][0] + norm_pads[i][1] for i in range(self.ndim))
+        out = NDArray.make(new_shape, device=self.device)
+        out.fill(0.0)
+
+        target_slices = tuple(
+            slice(norm_pads[i][0], norm_pads[i][0] + self.shape[i], 1) for i in range(self.ndim)
+        )
+
+        out[target_slices] = self
+        return out
+
+    def flip(self, axes: tuple[int, ...] | None = None) -> "NDArray":
+        if axes is None:
+            axes = tuple(range(self.ndim))
+        if isinstance(axes, int):
+            axes = (axes,)
+        norm_axes = []
+        for ax in axes:
+            ax = ax if ax >= 0 else ax + self.ndim
+            assert 0 <= ax < self.ndim, "flip: axis out of range"
+            norm_axes.append(ax)
+
+        new_strides = list(self._strides)
+        off = self._offset
+        for ax in norm_axes:
+            off += (self._shape[ax] - 1) * self._strides[ax]
+            new_strides[ax] = -new_strides[ax]
+
+        view = NDArray.make(
+            self._shape,
+            strides=tuple(new_strides),
+            device=self.device,
+            handle=self._handle,
+            offset=off,
+        )
+        return view.compact()
+
+
 
 def array(a: Any, dtype: str = "float32", device: BackendDevice | None = None) -> NDArray:
     """Convenience methods to match numpy a bit more closely."""
@@ -647,9 +798,34 @@ def tanh(a: NDArray) -> NDArray:
     return a.tanh()
 
 
+def fft(a: NDArray, axis: int = -1) -> tuple[NDArray, NDArray]:
+    """
+    Compute FFT along specified axis, returning real and imaginary parts.
+
+    Returns:
+        Tuple of (real_part, imag_part)
+    """
+    return a.fft(axis=axis)
+
+
+def ifft(a_real: NDArray, a_imag: NDArray, axis: int = -1) -> NDArray:
+    """
+    Compute IFFT along specified axis from real and imaginary parts.
+
+    Args:
+        a_real: Real part of complex input
+        a_imag: Imaginary part of complex input
+        axis: Axis along which to compute IFFT
+
+    Returns:
+        Real-valued result of IFFT
+    """
+    return a_real.ifft(a_imag, axis=axis)
+
+
 def sum(a: NDArray, axis: int | tuple[int] | list[int] | None = None, keepdims: bool = False) -> NDArray:
     return a.sum(axis=axis, keepdims=keepdims)
 
+def flip(array: NDArray, axes: tuple[int, ...] | None = None) -> NDArray:
+    return array.flip(axes)
 
-def flip(a: NDArray, axes: tuple[int, ...]) -> NDArray:
-    return a.flip(axes)
