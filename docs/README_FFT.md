@@ -402,41 +402,6 @@ N=65536:  0.065 ms  (NumPy: 0.850 ms, 13x faster!) 🚀
 
 ---
 
-## 🎯 选择指南
-
-### 决策树
-
-```
-需要 FFT？
-  ├─ 学习算法？
-  │   └─ → Python Cooley-Tukey
-  │
-  ├─ 生产环境？
-  │   ├─ 小数组 (N ≤ 256)？
-  │   │   └─ → C++ Cooley-Tukey
-  │   ├─ 大数组 (N ≥ 4096) + 有 GPU？
-  │   │   └─ → CUDA Cooley-Tukey
-  │   └─ 其他
-  │       └─ → NumPy FFT
-  │
-  └─ 默认
-      └─ → NumPy FFT
-```
-
-### 场景推荐
-
-| 场景 | 推荐实现 | 原因 |
-|------|---------|------|
-| 学习 FFT 算法 | Python Cooley-Tukey | 代码清晰，易于理解 |
-| 教学演示 | Python Cooley-Tukey | 可以单步调试 |
-| 音频帧处理 (N=128) | C++ Cooley-Tukey | 2.7x 加速 |
-| 小窗口信号处理 | C++ Cooley-Tukey | 低延迟 |
-| 大图像处理 | CUDA Cooley-Tukey | GPU 并行 |
-| 批量 FFT | CUDA Cooley-Tukey | 批处理效率高 |
-| 通用生产环境 | NumPy FFT | 稳定可靠 |
-
----
-
 ## 📊 完整性能对比
 
 | 大小 | NumPy | Python CT | C++ | CUDA |
@@ -470,7 +435,6 @@ N=65536:  0.065 ms  (NumPy: 0.850 ms, 13x faster!) 🚀
 
 ## 📚 更多文档
 
-- **[SETUP_GITHUB.md](SETUP_GITHUB.md)** - Git 仓库设置
 - **[FFT_COOLEY_TUKEY_GUIDE.md](FFT_COOLEY_TUKEY_GUIDE.md)** - 算法详解
 - **[COLAB_TEST_GUIDE.md](COLAB_TEST_GUIDE.md)** - Colab 测试指南
 
