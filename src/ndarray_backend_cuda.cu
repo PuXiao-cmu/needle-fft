@@ -669,24 +669,41 @@ void CooleyTukeyIFFTCuda(const CudaArray& a_real, const CudaArray& a_imag,
   }
 
   // Allocate temporary arrays on GPU
-  CudaArray temp_real(n);
-  CudaArray temp_imag(n);
   CudaArray result_real(n);
   CudaArray result_imag(n);
 
-  // Step 1: Copy input and conjugate (negate imaginary part)
-  cudaMemcpy(temp_real.ptr, a_real.ptr, n * ELEM_SIZE, cudaMemcpyDeviceToDevice);
-  cudaMemcpy(temp_imag.ptr, a_imag.ptr, n * ELEM_SIZE, cudaMemcpyDeviceToDevice);
+  // Step 1: Copy input and negate imaginary part (conjugate)
+  cudaMemcpy(result_real.ptr, a_real.ptr, n * ELEM_SIZE, cudaMemcpyDeviceToDevice);
+  cudaMemcpy(result_imag.ptr, a_imag.ptr, n * ELEM_SIZE, cudaMemcpyDeviceToDevice);
 
   CudaDims dim = CudaOneDim(n);
   ConjugateAndNormalizeKernel<<<dim.grid, dim.block>>>(
-      temp_real.ptr, temp_imag.ptr, n, 1.0f);
+      result_real.ptr, result_imag.ptr, n, 1.0f);
   cudaDeviceSynchronize();
 
-  // Step 2: Apply FFT
-  CooleyTukeyFFTCuda(temp_real, &result_real, &result_imag, n);
+  // Step 2: Bit-reversal permutation
+  size_t num_stages = 0;
+  size_t temp = n;
+  while (temp > 1) {
+    temp >>= 1;
+    num_stages++;
+  }
 
-  // Step 3: Conjugate and normalize by 1/N
+  BitReversalKernel<<<dim.grid, dim.block>>>(result_real.ptr, result_imag.ptr, n, num_stages);
+  cudaDeviceSynchronize();
+
+  // Step 3: FFT butterfly stages (same as FFT)
+  for (size_t stage = 1; stage <= num_stages; stage++) {
+    size_t num_butterflies = n / 2;
+    CudaDims butterfly_dim = CudaOneDim(num_butterflies);
+
+    FFTButterflyKernel<<<butterfly_dim.grid, butterfly_dim.block>>>(
+        result_real.ptr, result_imag.ptr, n, stage);
+
+    cudaDeviceSynchronize();
+  }
+
+  // Step 4: Conjugate and normalize by 1/N
   ConjugateAndNormalizeKernel<<<dim.grid, dim.block>>>(
       result_real.ptr, result_imag.ptr, n, 1.0f / n);
   cudaDeviceSynchronize();
