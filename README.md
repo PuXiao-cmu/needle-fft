@@ -11,7 +11,7 @@ CMU 10-714 Deep Learning Systems 课程项目。
 | **NumPy FFT** | `backend_ndarray/ndarray_backend_numpy.py` | ⚡⚡⚡⚡⚡ | 生产环境（默认）|
 | **Python Cooley-Tukey** | `backend_ndarray/fft_cooley_tukey.py` | ⚡ | 学习算法 |
 | **C++ Cooley-Tukey** | `src/ndarray_backend_cpu.cc` (行 387-585) | ⚡⚡⚡ | 小数组，28x加速 |
-| **CUDA Cooley-Tukey** | `src/ndarray_backend_cuda.cu` (行 517-696) | ⚡⚡⚡⚡ | 大数组，13x加速 |
+| **CUDA Cooley-Tukey** | `src/ndarray_backend_cuda.cu` (行 517-696) | ⚡⚡ | 超大数组，2.6x加速 |
 
 ### 快速开始
 
@@ -28,14 +28,14 @@ python3 tests/fft/test_fft_implementations.py  # 所有实现对比
 ### 性能亮点
 
 - ✅ **C++ 小数组优化**: N=64 时比 NumPy 快 **28x**
-- ✅ **CUDA 大数组加速**: N=65536 时比 NumPy 快 **13x**（预期）
+- ✅ **CUDA 大数组加速**: N=65536 时比 NumPy 快 **2.6x** (Tesla T4 实测)
+- ⚠️ **CUDA 待优化**: 当前实现未优化，性能低于理论值
 - ✅ **高精度**: 往返误差 < 1e-6
 - ✅ **完整测试**: CPU 和 GPU 测试套件
 
 ### 文档
 
 - **[docs/README_FFT.md](docs/README_FFT.md)** - 四种 FFT 实现详解
-- **[docs/SETUP_GITHUB.md](docs/SETUP_GITHUB.md)** - Git 设置指南
 - **[docs/FFT_COOLEY_TUKEY_GUIDE.md](docs/FFT_COOLEY_TUKEY_GUIDE.md)** - 算法详解
 - **[docs/COLAB_TEST_GUIDE.md](docs/COLAB_TEST_GUIDE.md)** - Google Colab 测试
 
