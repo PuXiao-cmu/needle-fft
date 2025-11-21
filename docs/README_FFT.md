@@ -425,10 +425,10 @@ N=65536:  0.065 ms  (NumPy: 0.850 ms, 13x faster!) 🚀
 
 | 文件 | 测试内容 |
 |------|---------|
-| `test_fft_implementations.py` | NumPy vs Python Cooley-Tukey |
-| `test_fft_direct.py` | C++ 功能和性能 |
-| `test_fft_performance.py` | C++ 详细性能分析 |
-| `test_cuda_colab.py` | CUDA 完整测试（需GPU）|
+| `tests/fft/test_fft_implementations.py` | NumPy vs Python Cooley-Tukey |
+| `tests/fft/test_fft_direct.py` | C++ 功能和性能 |
+| `tests/fft/test_fft_performance.py` | C++ 详细性能分析 |
+| `tests/fft/test_cuda_colab.py` | CUDA 完整测试（需GPU）|
 | `Needle_CUDA_FFT_Test.ipynb` | Colab 交互式测试 |
 
 ---
@@ -447,6 +447,6 @@ N=65536:  0.065 ms  (NumPy: 0.850 ms, 13x faster!) 🚀
 make clean && make
 
 # 测试所有实现
-python3 test_fft_implementations.py
-python3 test_fft_direct.py
+python3 tests/fft/test_fft_implementations.py
+python3 tests/fft/test_fft_direct.py
 ```

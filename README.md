@@ -21,8 +21,8 @@ pip install pybind11
 make clean && make
 
 # 测试
-python3 test_fft_direct.py           # C++ FFT
-python3 test_fft_implementations.py  # 所有实现对比
+python3 tests/fft/test_fft_direct.py           # C++ FFT
+python3 tests/fft/test_fft_implementations.py  # 所有实现对比
 ```
 
 ### 性能亮点
