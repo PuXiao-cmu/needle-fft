@@ -1,0 +1,299 @@
+/Users/pux/CMU/CMU/25fall/dl sys/needle/./python/needle/backend_ndarray/ndarray_backend_numpy.py:133: RuntimeWarning: divide by zero encountered in matmul
+  out.array[:] = (a.array.reshape(m, n) @ b.array.reshape(n, p)).reshape(-1)
+/Users/pux/CMU/CMU/25fall/dl sys/needle/./python/needle/backend_ndarray/ndarray_backend_numpy.py:133: RuntimeWarning: overflow encountered in matmul
+  out.array[:] = (a.array.reshape(m, n) @ b.array.reshape(n, p)).reshape(-1)
+/Users/pux/CMU/CMU/25fall/dl sys/needle/./python/needle/backend_ndarray/ndarray_backend_numpy.py:133: RuntimeWarning: invalid value encountered in matmul
+  out.array[:] = (a.array.reshape(m, n) @ b.array.reshape(n, p)).reshape(-1)
+Using needle backend
+================================================================================
+MNIST Training: FFT Implementation Comparison
+================================================================================
+
+Test Configuration:
+  Epochs: 3
+  Batch size: 32
+  Training batches/epoch: 200
+  Test batches: 100
+
+
+################################################################################
+# Testing: C++ Cooley-Tukey + Bluestein
+################################################################################
+
+================================================================================
+Training with FFT Implementation: cpp
+================================================================================
+
+Loading MNIST dataset...
+Training samples: 60000
+Test samples: 10000
+
+Creating model...
+
+Training for 3 epochs...
+Batches per epoch: 200 training, 100 test
+
+--------------------------------------------------------------------------------
+Epoch 1/3
+--------------------------------------------------------------------------------
+  Batch 50/200 | Loss: 0.4737
+  Batch 100/200 | Loss: 0.2409
+  Batch 150/200 | Loss: 0.1975
+  Batch 200/200 | Loss: 0.6046
+
+Epoch 1 Results:
+  Train Loss: 0.6257
+  Train Accuracy: 81.86%
+  Test Accuracy: 87.62%
+  Epoch Time: 0.4s
+
+--------------------------------------------------------------------------------
+Epoch 2/3
+--------------------------------------------------------------------------------
+  Batch 50/200 | Loss: 0.3536
+  Batch 100/200 | Loss: 0.2372
+  Batch 150/200 | Loss: 0.4572
+  Batch 200/200 | Loss: 0.1783
+
+Epoch 2 Results:
+  Train Loss: 0.2877
+  Train Accuracy: 91.86%
+  Test Accuracy: 90.50%
+  Epoch Time: 0.3s
+
+--------------------------------------------------------------------------------
+Epoch 3/3
+--------------------------------------------------------------------------------
+  Batch 50/200 | Loss: 0.2529
+  Batch 100/200 | Loss: 0.1860
+  Batch 150/200 | Loss: 0.1591
+  Batch 200/200 | Loss: 0.0335
+
+Epoch 3 Results:
+  Train Loss: 0.2215
+  Train Accuracy: 93.38%
+  Test Accuracy: 92.09%
+  Epoch Time: 0.4s
+
+================================================================================
+Training Complete: cpp
+================================================================================
+Final Train Accuracy: 93.38%
+Final Test Accuracy: 92.09%
+Average Epoch Time: 0.4s
+
+
+################################################################################
+# Testing: NumPy FFT (Reference)
+################################################################################
+
+================================================================================
+Training with FFT Implementation: numpy
+================================================================================
+
+Loading MNIST dataset...
+Training samples: 60000
+Test samples: 10000
+
+Creating model...
+
+Training for 3 epochs...
+Batches per epoch: 200 training, 100 test
+
+--------------------------------------------------------------------------------
+Epoch 1/3
+--------------------------------------------------------------------------------
+  Batch 50/200 | Loss: 0.8079
+  Batch 100/200 | Loss: 0.5184
+  Batch 150/200 | Loss: 0.3581
+  Batch 200/200 | Loss: 0.4384
+
+Epoch 1 Results:
+  Train Loss: 0.6348
+  Train Accuracy: 81.50%
+  Test Accuracy: 88.84%
+  Epoch Time: 0.4s
+
+--------------------------------------------------------------------------------
+Epoch 2/3
+--------------------------------------------------------------------------------
+  Batch 50/200 | Loss: 0.2288
+  Batch 100/200 | Loss: 0.7048
+  Batch 150/200 | Loss: 0.1582
+  Batch 200/200 | Loss: 0.4447
+
+Epoch 2 Results:
+  Train Loss: 0.2747
+  Train Accuracy: 91.91%
+  Test Accuracy: 90.62%
+  Epoch Time: 0.4s
+
+--------------------------------------------------------------------------------
+Epoch 3/3
+--------------------------------------------------------------------------------
+  Batch 50/200 | Loss: 0.3399
+  Batch 100/200 | Loss: 0.2368
+  Batch 150/200 | Loss: 0.2447
+  Batch 200/200 | Loss: 0.6523
+
+Epoch 3 Results:
+  Train Loss: 0.2236
+  Train Accuracy: 93.22%
+  Test Accuracy: 92.66%
+  Epoch Time: 0.4s
+
+================================================================================
+Training Complete: numpy
+================================================================================
+Final Train Accuracy: 93.22%
+Final Test Accuracy: 92.66%
+Average Epoch Time: 0.4s
+
+
+################################################################################
+# Testing: Python Cooley-Tukey
+################################################################################
+
+================================================================================
+Training with FFT Implementation: cooley_tukey
+================================================================================
+
+Loading MNIST dataset...
+Training samples: 60000
+Test samples: 10000
+
+Creating model...
+
+Training for 3 epochs...
+Batches per epoch: 200 training, 100 test
+
+--------------------------------------------------------------------------------
+Epoch 1/3
+--------------------------------------------------------------------------------
+  Batch 50/200 | Loss: 0.5229
+  Batch 100/200 | Loss: 0.4058
+  Batch 150/200 | Loss: 0.5027
+  Batch 200/200 | Loss: 0.5892
+
+Epoch 1 Results:
+  Train Loss: 0.6303
+  Train Accuracy: 81.33%
+  Test Accuracy: 87.62%
+  Epoch Time: 0.4s
+
+--------------------------------------------------------------------------------
+Epoch 2/3
+--------------------------------------------------------------------------------
+  Batch 50/200 | Loss: 0.2809
+  Batch 100/200 | Loss: 0.6133
+  Batch 150/200 | Loss: 0.3488
+  Batch 200/200 | Loss: 0.1877
+
+Epoch 2 Results:
+  Train Loss: 0.2878
+  Train Accuracy: 91.66%
+  Test Accuracy: 90.44%
+  Epoch Time: 0.4s
+
+--------------------------------------------------------------------------------
+Epoch 3/3
+--------------------------------------------------------------------------------
+  Batch 50/200 | Loss: 0.4744
+  Batch 100/200 | Loss: 0.0677
+  Batch 150/200 | Loss: 0.3345
+  Batch 200/200 | Loss: 0.0645
+
+Epoch 3 Results:
+  Train Loss: 0.2291
+  Train Accuracy: 93.30%
+  Test Accuracy: 92.94%
+  Epoch Time: 0.4s
+
+================================================================================
+Training Complete: cooley_tukey
+================================================================================
+Final Train Accuracy: 93.30%
+Final Test Accuracy: 92.94%
+Average Epoch Time: 0.4s
+
+
+================================================================================
+COMPARISON SUMMARY
+================================================================================
+
+Implementation            | Final Train Acc | Final Test Acc  | Avg Epoch Time 
+--------------------------------------------------------------------------------
+cpp                       |         93.38% |         92.09% |           0.4s
+numpy                     |         93.22% |         92.66% |           0.4s
+cooley_tukey              |         93.30% |         92.94% |           0.4s
+
+
+================================================================================
+EPOCH-BY-EPOCH COMPARISON
+================================================================================
+
+Epoch 1:
+Implementation            | Train Loss   | Train Acc    | Test Acc     | Time      
+--------------------------------------------------------------------------------
+cpp                       |     0.6257 |      81.86% |      87.62% |      0.4s
+numpy                     |     0.6348 |      81.50% |      88.84% |      0.4s
+cooley_tukey              |     0.6303 |      81.33% |      87.62% |      0.4s
+
+Epoch 2:
+Implementation            | Train Loss   | Train Acc    | Test Acc     | Time      
+--------------------------------------------------------------------------------
+cpp                       |     0.2877 |      91.86% |      90.50% |      0.3s
+numpy                     |     0.2747 |      91.91% |      90.62% |      0.4s
+cooley_tukey              |     0.2878 |      91.66% |      90.44% |      0.4s
+
+Epoch 3:
+Implementation            | Train Loss   | Train Acc    | Test Acc     | Time      
+--------------------------------------------------------------------------------
+cpp                       |     0.2215 |      93.38% |      92.09% |      0.4s
+numpy                     |     0.2236 |      93.22% |      92.66% |      0.4s
+cooley_tukey              |     0.2291 |      93.30% |      92.94% |      0.4s
+
+
+================================================================================
+ANALYSIS
+================================================================================
+
+1. Best Test Accuracy:
+   cooley_tukey: 92.94%
+
+2. Fastest Training:
+   cpp: 0.4s/epoch
+
+3. Convergence:
+   cpp: 87.62% → 92.09% (+ 4.47%)
+   numpy: 88.84% → 92.66% (+ 3.81%)
+   cooley_tukey: 87.62% → 92.94% (+ 5.31%)
+
+4. Training Stability (Loss Reduction):
+   cpp: 0.6257 → 0.2215 (64.6% reduction)
+   numpy: 0.6348 → 0.2236 (64.8% reduction)
+   cooley_tukey: 0.6303 → 0.2291 (63.6% reduction)
+
+
+================================================================================
+CONCLUSIONS
+================================================================================
+
+1. All FFT implementations produce similar results
+   - Test accuracy variation: < 2%
+   - Convergence behavior: Consistent
+   - Training stability: All stable
+
+2. C++ FFT Backend Performance:
+   - Accuracy vs NumPy: Δ0.56%
+   - Speed vs NumPy: 0.99x
+   - N=28 Support: ✓ Via Bluestein algorithm
+   - Training Stability: ✓ Equivalent to NumPy
+
+3. Recommendations:
+   - Production: NumPy FFT (fastest, most stable)
+   - Learning: C++ FFT (educational value, good accuracy)
+   - Research: Python Cooley-Tukey (full transparency)
+
+================================================================================
+

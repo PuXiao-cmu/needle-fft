@@ -6,7 +6,12 @@ from typing import Any, Callable, Iterable, Union
 import numpy as np
 
 from . import ndarray_backend_numpy
-from . import ndarray_backend_cpu  # type: ignore[attr-defined]
+
+# Try to import CPU backend (may not be compiled)
+try:
+    from . import ndarray_backend_cpu  # type: ignore[attr-defined]
+except ImportError:
+    ndarray_backend_cpu = None  # type: ignore[assignment]
 
 
 # math.prod not in Python 3.7

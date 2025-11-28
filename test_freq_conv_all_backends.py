@@ -222,7 +222,7 @@ def main():
         ("NumPy FFT (default)", "numpy", needle.cpu_numpy(), (32, 32)),
         ("NumPy FFT (non-pow2)", "numpy", needle.cpu_numpy(), (28, 28)),
         ("Python Cooley-Tukey", "cooley_tukey", needle.cpu_numpy(), (32, 32)),
-        ("C++ Cooley-Tukey", "cpp", needle.cpu_numpy(), (32, 32)),
+        ("C++ Cooley-Tukey", "cpp", needle.cpu(), (32, 32)),
     ]
 
     # Add CUDA tests if available

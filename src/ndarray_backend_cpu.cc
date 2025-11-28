@@ -502,6 +502,78 @@ void CooleyTukeyFFT(const AlignedArray& a, AlignedArray* out_real,
 }
 
 /**
+ * Cooley-Tukey FFT for complex input
+ *
+ * This version accepts both real and imaginary parts as input,
+ * useful for Bluestein algorithm and other applications requiring
+ * FFT of complex data.
+ *
+ * Args:
+ *   a_real: Input real part
+ *   a_imag: Input imaginary part
+ *   out_real: Output real part
+ *   out_imag: Output imaginary part
+ *   n: Array size (must be power of 2)
+ */
+void CooleyTukeyFFTComplex(const AlignedArray& a_real, const AlignedArray& a_imag,
+                           AlignedArray* out_real, AlignedArray* out_imag, size_t n) {
+  // Check that n is a power of 2
+  if (n == 0 || (n & (n - 1)) != 0) {
+    throw std::invalid_argument("FFT size must be a power of 2");
+  }
+
+  // Initialize output with input
+  for (size_t i = 0; i < n; i++) {
+    out_real->ptr[i] = a_real.ptr[i];
+    out_imag->ptr[i] = a_imag.ptr[i];
+  }
+
+  // Step 1: Bit-reversal permutation
+  BitReversalPermutation(out_real->ptr, out_imag->ptr, n);
+
+  // Step 2: Iterative FFT (butterfly operations)
+  for (size_t stage = 1; stage <= static_cast<size_t>(log2(n)); stage++) {
+    size_t m = 1 << stage;  // Size of DFT for this stage (2^stage)
+
+    // Twiddle factor: W_m = exp(-2πi/m)
+    double wm_real = cos(-2.0 * PI / m);
+    double wm_imag = sin(-2.0 * PI / m);
+
+    // Process each group of size m
+    for (size_t k = 0; k < n; k += m) {
+      double w_real = 1.0;
+      double w_imag = 0.0;
+
+      for (size_t j = 0; j < m / 2; j++) {
+        // Butterfly operation
+        size_t idx_even = k + j;
+        size_t idx_odd = k + j + m / 2;
+
+        // temp = w * odd
+        double temp_real = w_real * out_real->ptr[idx_odd] - w_imag * out_imag->ptr[idx_odd];
+        double temp_imag = w_real * out_imag->ptr[idx_odd] + w_imag * out_real->ptr[idx_odd];
+
+        // Butterfly
+        double even_real = out_real->ptr[idx_even];
+        double even_imag = out_imag->ptr[idx_even];
+
+        out_real->ptr[idx_even] = even_real + temp_real;
+        out_imag->ptr[idx_even] = even_imag + temp_imag;
+
+        out_real->ptr[idx_odd] = even_real - temp_real;
+        out_imag->ptr[idx_odd] = even_imag - temp_imag;
+
+        // Update twiddle factor: w *= wm
+        double new_w_real = w_real * wm_real - w_imag * wm_imag;
+        double new_w_imag = w_real * wm_imag + w_imag * wm_real;
+        w_real = new_w_real;
+        w_imag = new_w_imag;
+      }
+    }
+  }
+}
+
+/**
  * Cooley-Tukey IFFT (using FFT with conjugate trick)
  *
  * IFFT(X) = conj(FFT(conj(X))) / N
@@ -644,5 +716,6 @@ PYBIND11_MODULE(ndarray_backend_cpu, m) {
 
   // FFT functions
   m.def("cooley_tukey_fft", CooleyTukeyFFT);
+  m.def("cooley_tukey_fft_complex", CooleyTukeyFFTComplex);
   m.def("cooley_tukey_ifft", CooleyTukeyIFFT);
 }

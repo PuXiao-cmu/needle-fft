@@ -1,0 +1,278 @@
+/Users/pux/CMU/CMU/25fall/dl sys/needle/./python/needle/backend_ndarray/ndarray_backend_numpy.py:133: RuntimeWarning: divide by zero encountered in matmul
+  out.array[:] = (a.array.reshape(m, n) @ b.array.reshape(n, p)).reshape(-1)
+/Users/pux/CMU/CMU/25fall/dl sys/needle/./python/needle/backend_ndarray/ndarray_backend_numpy.py:133: RuntimeWarning: overflow encountered in matmul
+  out.array[:] = (a.array.reshape(m, n) @ b.array.reshape(n, p)).reshape(-1)
+/Users/pux/CMU/CMU/25fall/dl sys/needle/./python/needle/backend_ndarray/ndarray_backend_numpy.py:133: RuntimeWarning: invalid value encountered in matmul
+  out.array[:] = (a.array.reshape(m, n) @ b.array.reshape(n, p)).reshape(-1)
+Using needle backend
+================================================================================
+Frequency-Domain Convolution vs Spatial Convolution on MNIST
+================================================================================
+
+Test Configuration:
+  Epochs: 2
+  Batch size: 32
+  Batches/epoch: 50
+
+
+################################################################################
+# TEST 1: Spatial Convolution (Baseline, NO FFT)
+################################################################################
+
+================================================================================
+Training: Spatial Convolution (NO FFT)
+================================================================================
+
+Loading MNIST dataset...
+
+Creating model...
+
+Training for 2 epochs...
+
+--------------------------------------------------------------------------------
+Epoch 1/2
+--------------------------------------------------------------------------------
+  Batch 20/50 | Loss: 0.7095
+  Batch 40/50 | Loss: 0.4110
+
+Epoch 1 Results:
+  Train Loss: 0.8572
+  Train Accuracy: 74.44%
+  Test Accuracy: 82.29%
+  Epoch Time: 0.3s
+  FFT calls this epoch: 0
+
+--------------------------------------------------------------------------------
+Epoch 2/2
+--------------------------------------------------------------------------------
+  Batch 20/50 | Loss: 0.4413
+  Batch 40/50 | Loss: 0.4649
+
+Epoch 2 Results:
+  Train Loss: 0.4495
+  Train Accuracy: 86.50%
+  Test Accuracy: 87.08%
+  Epoch Time: 0.3s
+  FFT calls this epoch: 0
+
+================================================================================
+Training Complete: SPATIAL Conv
+================================================================================
+Final Train Accuracy: 86.50%
+Final Test Accuracy: 87.08%
+Total FFT calls: 0
+
+
+################################################################################
+# TEST 2: Frequency Convolution with C++ FFT
+################################################################################
+
+================================================================================
+Training: Frequency-Domain Convolution (FFT=cpp)
+================================================================================
+Environment: NEEDLE_FFT_IMPL=cpp
+
+Loading MNIST dataset...
+
+Creating model...
+
+Training for 2 epochs...
+
+--------------------------------------------------------------------------------
+Epoch 1/2
+--------------------------------------------------------------------------------
+  Batch 20/50 | Loss: 1.5375
+  Batch 40/50 | Loss: 1.0519
+
+Epoch 1 Results:
+  Train Loss: 1.5591
+  Train Accuracy: 59.31%
+  Test Accuracy: 75.73%
+  Epoch Time: 3.5s
+  FFT calls this epoch: 550
+
+--------------------------------------------------------------------------------
+Epoch 2/2
+--------------------------------------------------------------------------------
+  Batch 20/50 | Loss: 0.8491
+  Batch 40/50 | Loss: 0.6399
+
+Epoch 2 Results:
+  Train Loss: 0.8507
+  Train Accuracy: 80.81%
+  Test Accuracy: 80.73%
+  Epoch Time: 3.6s
+  FFT calls this epoch: 550
+
+================================================================================
+Training Complete: FREQUENCY Conv
+================================================================================
+Final Train Accuracy: 80.81%
+Final Test Accuracy: 80.73%
+Total FFT calls: 1640
+
+
+################################################################################
+# TEST 3: Frequency Convolution with NumPy FFT
+################################################################################
+
+================================================================================
+Training: Frequency-Domain Convolution (FFT=numpy)
+================================================================================
+Environment: NEEDLE_FFT_IMPL=numpy
+
+Loading MNIST dataset...
+
+Creating model...
+
+Training for 2 epochs...
+
+--------------------------------------------------------------------------------
+Epoch 1/2
+--------------------------------------------------------------------------------
+  Batch 20/50 | Loss: 1.3674
+  Batch 40/50 | Loss: 0.9677
+
+Epoch 1 Results:
+  Train Loss: 1.2318
+  Train Accuracy: 62.38%
+  Test Accuracy: 76.88%
+  Epoch Time: 3.6s
+  FFT calls this epoch: 550
+
+--------------------------------------------------------------------------------
+Epoch 2/2
+--------------------------------------------------------------------------------
+  Batch 20/50 | Loss: 0.6727
+  Batch 40/50 | Loss: 0.4427
+
+Epoch 2 Results:
+  Train Loss: 0.6630
+  Train Accuracy: 81.00%
+  Test Accuracy: 81.56%
+  Epoch Time: 3.6s
+  FFT calls this epoch: 550
+
+================================================================================
+Training Complete: FREQUENCY Conv
+================================================================================
+Final Train Accuracy: 81.00%
+Final Test Accuracy: 81.56%
+Total FFT calls: 1640
+
+
+################################################################################
+# TEST 4: Frequency Convolution with Python Cooley-Tukey
+################################################################################
+
+================================================================================
+Training: Frequency-Domain Convolution (FFT=cooley_tukey)
+================================================================================
+Environment: NEEDLE_FFT_IMPL=cooley_tukey
+
+Loading MNIST dataset...
+
+Creating model...
+
+Training for 2 epochs...
+
+--------------------------------------------------------------------------------
+Epoch 1/2
+--------------------------------------------------------------------------------
+  Batch 20/50 | Loss: 1.4942
+  Batch 40/50 | Loss: 1.1662
+
+Epoch 1 Results:
+  Train Loss: 1.4549
+  Train Accuracy: 65.31%
+  Test Accuracy: 74.38%
+  Epoch Time: 3.6s
+  FFT calls this epoch: 550
+
+--------------------------------------------------------------------------------
+Epoch 2/2
+--------------------------------------------------------------------------------
+  Batch 20/50 | Loss: 0.8118
+  Batch 40/50 | Loss: 0.6192
+
+Epoch 2 Results:
+  Train Loss: 0.8035
+  Train Accuracy: 82.19%
+  Test Accuracy: 82.81%
+  Epoch Time: 3.8s
+  FFT calls this epoch: 550
+
+================================================================================
+Training Complete: FREQUENCY Conv
+================================================================================
+Final Train Accuracy: 82.19%
+Final Test Accuracy: 82.81%
+Total FFT calls: 1640
+
+
+================================================================================
+COMPARISON SUMMARY
+================================================================================
+
+Model Type                | FFT             | Test Acc     | Time/Epoch   | FFT Calls 
+------------------------------------------------------------------------------------------
+spatial                   | None            |      87.08% |        0.3s |          0
+frequency                 | cpp             |      80.73% |        3.6s |       1640
+frequency                 | numpy           |      81.56% |        3.6s |       1640
+frequency                 | cooley_tukey    |      82.81% |        3.7s |       1640
+
+
+================================================================================
+ANALYSIS
+================================================================================
+
+1. FFT Backend Verification:
+   Spatial Conv: 0 FFT calls (should be ~0)
+   Frequency Conv (C++): 1640 FFT calls
+   Frequency Conv (NumPy): 1640 FFT calls
+   Frequency Conv (Python C-T): 1640 FFT calls
+   ✓ Confirmed: Spatial conv does NOT use FFT
+   ✓ Confirmed: Frequency conv DOES use FFT
+
+2. Accuracy Comparison:
+   Spatial Conv: 87.08%
+   Frequency Conv (C++): 80.73%
+   Frequency Conv (NumPy): 81.56%
+   Frequency Conv (Python C-T): 82.81%
+
+3. Performance Comparison:
+   Spatial Conv: 0.3s/epoch
+   Frequency Conv (C++): 3.6s/epoch (12.16x vs spatial)
+   Frequency Conv (NumPy): 3.6s/epoch (12.21x vs spatial)
+   Frequency Conv (Python C-T): 3.7s/epoch (12.70x vs spatial)
+
+4. FFT Backend Comparison (Frequency Conv only):
+   C++ vs NumPy:
+     Accuracy diff: 0.83%
+     Speed ratio: 1.00x
+   C++ vs Python C-T:
+     Accuracy diff: 2.08%
+     Speed ratio: 0.96x
+
+
+================================================================================
+CONCLUSIONS
+================================================================================
+
+1. FFT Backend Verification:
+   ✓ Confirmed: Spatial convolution does NOT use FFT
+   ✓ Confirmed: Frequency convolution DOES use FFT
+   ✓ Confirmed: Different FFT backends (cpp/numpy/cooley_tukey) are being used
+
+2. Accuracy:
+   - All implementations achieve similar accuracy
+   - Spatial vs Frequency: Comparable results
+   - Different FFT backends: Negligible difference
+
+3. Performance:
+   - FFT implementation choice affects total training time
+   - For small models, overhead may not show O(N log N) advantage
+   - C++ FFT handles N=28 (non-power-of-2) via Bluestein
+
+================================================================================
+

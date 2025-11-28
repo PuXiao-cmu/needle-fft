@@ -167,8 +167,8 @@ class Transpose(TensorOp):
         a = node.inputs[0]
         if self.axes is None:
             # swap last two back
-            i, j = a.ndim - 2, a.ndim - 1
-            inv = list(range(a.ndim))
+            i, j = len(a.shape) - 2, len(a.shape) - 1
+            inv = list(range(len(a.shape)))
             inv[i], inv[j] = inv[j], inv[i]
             return transpose(out_grad, tuple(inv))
 
@@ -176,12 +176,12 @@ class Transpose(TensorOp):
         if len(axes) == 2:
             # swap back the same two
             i, j = axes
-            inv = list(range(a.ndim))
+            inv = list(range(len(a.shape)))
             inv[i], inv[j] = inv[j], inv[i]
             return transpose(out_grad, tuple(inv))
-        elif len(axes) == a.ndim:
+        elif len(axes) == len(a.shape):
             # inverse permutation
-            inv = [0] * a.ndim
+            inv = [0] * len(a.shape)
             for i, ax in enumerate(axes):
                 inv[ax] = i
             return transpose(out_grad, tuple(inv))
@@ -661,7 +661,7 @@ class FFT(TensorTupleOp):
         # Check if device supports FFT
         if hasattr(a, 'device'):
             device_name = getattr(a.device, 'name', 'unknown')
-            if device_name not in ['cpu_numpy', 'numpy']:
+            if device_name not in ['cpu_numpy', 'numpy', 'cpu', 'cuda']:
                 raise NotImplementedError(
                     f"FFT is not implemented for device '{device_name}'. "
                     f"Currently only 'cpu_numpy' backend is supported. "
