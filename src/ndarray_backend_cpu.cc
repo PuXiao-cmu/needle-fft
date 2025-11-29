@@ -653,6 +653,139 @@ void CooleyTukeyIFFT(const AlignedArray& a_real, const AlignedArray& a_imag,
   }
 }
 
+/**
+ * Batch FFT for real input
+ *
+ * Processes multiple 1D FFTs in a single call to reduce Python-C++ overhead.
+ *
+ * Args:
+ *   a: Input array (batch_size * n elements, flattened)
+ *   out_real: Output real parts (batch_size * n elements)
+ *   out_imag: Output imaginary parts (batch_size * n elements)
+ *   batch_size: Number of FFTs to compute
+ *   n: Size of each FFT (must be power of 2)
+ */
+void CooleyTukeyFFTBatch(const AlignedArray& a, AlignedArray* out_real,
+                         AlignedArray* out_imag, size_t batch_size, size_t n) {
+  if (n == 0 || (n & (n - 1)) != 0) {
+    throw std::invalid_argument("FFT size must be a power of 2");
+  }
+
+  // Process each batch element
+  for (size_t b = 0; b < batch_size; b++) {
+    size_t offset = b * n;
+
+    // Create views into the batch arrays
+    AlignedArray a_view(n);
+    AlignedArray out_real_view(n);
+    AlignedArray out_imag_view(n);
+
+    // Copy input slice
+    for (size_t i = 0; i < n; i++) {
+      a_view.ptr[i] = a.ptr[offset + i];
+    }
+
+    // Compute FFT for this slice
+    CooleyTukeyFFT(a_view, &out_real_view, &out_imag_view, n);
+
+    // Copy result back
+    for (size_t i = 0; i < n; i++) {
+      out_real->ptr[offset + i] = out_real_view.ptr[i];
+      out_imag->ptr[offset + i] = out_imag_view.ptr[i];
+    }
+  }
+}
+
+/**
+ * Batch FFT for complex input
+ *
+ * Processes multiple 1D FFTs of complex data in a single call.
+ *
+ * Args:
+ *   a_real: Input real parts (batch_size * n elements)
+ *   a_imag: Input imaginary parts (batch_size * n elements)
+ *   out_real: Output real parts (batch_size * n elements)
+ *   out_imag: Output imaginary parts (batch_size * n elements)
+ *   batch_size: Number of FFTs to compute
+ *   n: Size of each FFT (must be power of 2)
+ */
+void CooleyTukeyFFTComplexBatch(const AlignedArray& a_real, const AlignedArray& a_imag,
+                                AlignedArray* out_real, AlignedArray* out_imag,
+                                size_t batch_size, size_t n) {
+  if (n == 0 || (n & (n - 1)) != 0) {
+    throw std::invalid_argument("FFT size must be a power of 2");
+  }
+
+  // Process each batch element
+  for (size_t b = 0; b < batch_size; b++) {
+    size_t offset = b * n;
+
+    // Create views
+    AlignedArray a_real_view(n);
+    AlignedArray a_imag_view(n);
+    AlignedArray out_real_view(n);
+    AlignedArray out_imag_view(n);
+
+    // Copy input slice
+    for (size_t i = 0; i < n; i++) {
+      a_real_view.ptr[i] = a_real.ptr[offset + i];
+      a_imag_view.ptr[i] = a_imag.ptr[offset + i];
+    }
+
+    // Compute FFT for this slice
+    CooleyTukeyFFTComplex(a_real_view, a_imag_view, &out_real_view, &out_imag_view, n);
+
+    // Copy result back
+    for (size_t i = 0; i < n; i++) {
+      out_real->ptr[offset + i] = out_real_view.ptr[i];
+      out_imag->ptr[offset + i] = out_imag_view.ptr[i];
+    }
+  }
+}
+
+/**
+ * Batch IFFT
+ *
+ * Processes multiple 1D IFFTs in a single call.
+ *
+ * Args:
+ *   a_real: Input real parts (batch_size * n elements)
+ *   a_imag: Input imaginary parts (batch_size * n elements)
+ *   out: Output real values (batch_size * n elements)
+ *   batch_size: Number of IFFTs to compute
+ *   n: Size of each IFFT (must be power of 2)
+ */
+void CooleyTukeyIFFTBatch(const AlignedArray& a_real, const AlignedArray& a_imag,
+                          AlignedArray* out, size_t batch_size, size_t n) {
+  if (n == 0 || (n & (n - 1)) != 0) {
+    throw std::invalid_argument("IFFT size must be a power of 2");
+  }
+
+  // Process each batch element
+  for (size_t b = 0; b < batch_size; b++) {
+    size_t offset = b * n;
+
+    // Create views
+    AlignedArray a_real_view(n);
+    AlignedArray a_imag_view(n);
+    AlignedArray out_view(n);
+
+    // Copy input slice
+    for (size_t i = 0; i < n; i++) {
+      a_real_view.ptr[i] = a_real.ptr[offset + i];
+      a_imag_view.ptr[i] = a_imag.ptr[offset + i];
+    }
+
+    // Compute IFFT for this slice
+    CooleyTukeyIFFT(a_real_view, a_imag_view, &out_view, n);
+
+    // Copy result back
+    for (size_t i = 0; i < n; i++) {
+      out->ptr[offset + i] = out_view.ptr[i];
+    }
+  }
+}
+
 }  // namespace cpu
 }  // namespace needle
 
@@ -718,4 +851,9 @@ PYBIND11_MODULE(ndarray_backend_cpu, m) {
   m.def("cooley_tukey_fft", CooleyTukeyFFT);
   m.def("cooley_tukey_fft_complex", CooleyTukeyFFTComplex);
   m.def("cooley_tukey_ifft", CooleyTukeyIFFT);
+
+  // Batch FFT functions
+  m.def("cooley_tukey_fft_batch", CooleyTukeyFFTBatch);
+  m.def("cooley_tukey_fft_complex_batch", CooleyTukeyFFTComplexBatch);
+  m.def("cooley_tukey_ifft_batch", CooleyTukeyIFFTBatch);
 }
